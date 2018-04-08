@@ -2,6 +2,8 @@ import serial
 import re
 import numpy as np
 import sys
+from matplotlib import pyplot
+
 
 def main():
 	length = int(sys.argv[1])
@@ -13,17 +15,26 @@ def main():
 	
 	data =[]
 	while(len(data) < length):
+		print(len(data))
 		data.append(ser.readline())
 	
-	arr = np.zeros(length,2)
+	arr = np.zeros((length,2))
 	for i in range(length):
 		word = data[i]
-		s1 = re.search(',',word)
-		s2 = re.search('\r',word)
-		arr[i][0] = int(word[0:s1])
-		arr[i][1] = int(word[s1+1:s2])
+		if(len(word)>0):
+			seq = map(int,re.findall(r'\d+',word))
+			if(len(seq)>0):	
+				arr[i][0] = seq[0]
+				arr[i][1] = seq[1]
 	
+	fig = pyplot.figure()
+	ax = fig.add_subplot(111,polar=True)
+	arr = arr[~(arr==0).all(1)]
+	arr[:,1] = np.pi*arr[:,1]/180.0
+	arr[:,0] = arr[:,0]+2
+	ax.scatter(arr[:,1],arr[:,0])
 	np.savetxt(output+'.npy',arr)
+	pyplot.show()
 
 if __name__ == '__main__':
 	main()
